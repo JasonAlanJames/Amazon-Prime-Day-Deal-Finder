@@ -1,0 +1,5 @@
+{
+  "name": "Prime Day Deal Finder",
+  "description": "An AI-powered web app to find, categorize, and rank the best Amazon Prime Day deals. It uses Gemini to simulate a search for top deals, sorts them by discount, and presents them in a clean, categorized view.",
+  "requestFramePermissions": []
+}
