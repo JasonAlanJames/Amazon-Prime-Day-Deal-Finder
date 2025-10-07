@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { DealCategory } from './types';
 import { fetchPrimeDayDeals } from './services/geminiService';
@@ -5,6 +6,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import LoadingSpinner from './components/LoadingSpinner';
 import DealCard from './components/DealCard';
+import SearchProduct from './components/SearchProduct';
 
 const App: React.FC = () => {
   const [dealCategories, setDealCategories] = useState<DealCategory[] | null>(null);
@@ -16,8 +18,8 @@ const App: React.FC = () => {
     setError(null);
     setDealCategories(null);
     try {
-      const data = await fetchPrimeDayDeals();
-      setDealCategories(data);
+      const deals = await fetchPrimeDayDeals();
+      setDealCategories(deals);
     } catch (err: any) {
       setError(err.message || 'An unknown error occurred.');
     } finally {
@@ -42,6 +44,7 @@ const App: React.FC = () => {
     if (dealCategories) {
       return (
         <>
+          <SearchProduct />
           <div className="space-y-12">
             {dealCategories.map((category) => (
               <section key={category.categoryName}>

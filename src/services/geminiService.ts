@@ -1,10 +1,11 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { DealCategory } from '../types';
 
-// FIX: Per coding guidelines, initialize the API client using process.env.API_KEY directly.
+// FIX: Adhere to coding guidelines by using process.env.API_KEY for the API key.
+// The API key is assumed to be pre-configured in the environment.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// FIX: Update the function's return type to only return deal categories.
 export const fetchPrimeDayDeals = async (): Promise<DealCategory[]> => {
   try {
     const prompt = `
@@ -60,7 +61,6 @@ export const fetchPrimeDayDeals = async (): Promise<DealCategory[]> => {
 
     const dealsData = JSON.parse(parsableText);
 
-    // FIX: Return only the deals array.
     return dealsData as DealCategory[];
 
   } catch (error) {
