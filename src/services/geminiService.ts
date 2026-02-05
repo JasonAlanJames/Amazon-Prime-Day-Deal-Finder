@@ -70,6 +70,8 @@ export const fetchPrimeDayDeals = async (): Promise<DealCategory[]> => {
       console.error("Failed to parse JSON response from the model.");
       throw new Error("The AI returned an invalid response format. Please try again.");
     }
-    throw new Error("Failed to fetch Prime Day deals. The search may have been blocked or returned no results.");
+    // Append the original error message for better debugging on the client side.
+    const originalMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to fetch Prime Day deals. The search may have been blocked or returned no results. More details: ${originalMessage}`);
   }
 };

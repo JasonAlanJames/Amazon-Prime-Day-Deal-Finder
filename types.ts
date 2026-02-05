@@ -6,6 +6,7 @@ export interface ProductDeal {
   discountPercentage: number;
   description: string;
   productUrl: string;
+  imageUrl?: string;
 }
 
 export interface DealCategory {

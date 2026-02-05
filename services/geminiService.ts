@@ -1,10 +1,38 @@
-import { GoogleGenAI } from "@google/genai";
-import { DealCategory } from '../types';
 
-// FIX: Per coding guidelines, initialize the API client using process.env.API_KEY directly.
+import { GoogleGenAI } from "@google/genai";
+import { DealCategory, ProductDeal } from '../types';
+
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// FIX: Update the function's return type to only return deal categories.
+/**
+ * Generates a product image using the product name as a prompt.
+ * @param productName The name of the product to generate an image for.
+ * @returns A base64 data URL for the generated image, or an empty string if it fails.
+ */
+export const generateProductImage = async (productName: string): Promise<string> => {
+  try {
+    const response = await ai.models.generateImages({
+      model: 'imagen-4.0-generate-001',
+      prompt: `A professional, commercial-style product photograph of a "${productName}". The product is centered on a clean, minimalist, light gray background. The lighting is bright and even, highlighting the product's details. No text, logos, or distracting elements.`,
+      config: {
+        numberOfImages: 1,
+        outputMimeType: 'image/jpeg',
+        aspectRatio: '1:1',
+      },
+    });
+
+    if (response.generatedImages && response.generatedImages.length > 0) {
+      const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
+      return `data:image/jpeg;base64,${base64ImageBytes}`;
+    }
+  } catch (error) {
+    console.error(`Failed to generate image for "${productName}":`, error);
+  }
+  // Return an empty string if image generation fails, the frontend will handle it.
+  return '';
+};
+
+
 export const fetchPrimeDayDeals = async (): Promise<DealCategory[]> => {
   try {
     const prompt = `
@@ -54,19 +82,16 @@ export const fetchPrimeDayDeals = async (): Promise<DealCategory[]> => {
     });
 
     const jsonText = response.text.trim();
-    // It's possible the model wraps the JSON in markdown, so we need to extract it.
     const jsonMatch = jsonText.match(/```(json)?([\s\S]*?)```/);
     const parsableText = jsonMatch ? jsonMatch[2] : jsonText;
 
     const dealsData = JSON.parse(parsableText);
-
-    // FIX: Return only the deals array.
+    
     return dealsData as DealCategory[];
 
   } catch (error) {
     console.error("Error fetching deals from Gemini API:", error);
     if (error instanceof SyntaxError) {
-      // This helps debug if the model returns invalid JSON
       console.error("Failed to parse JSON response from the model.");
       throw new Error("The AI returned an invalid response format. Please try again.");
     }

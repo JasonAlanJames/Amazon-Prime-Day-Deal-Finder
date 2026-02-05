@@ -1,7 +1,6 @@
-
 import React, { useState, useCallback } from 'react';
 import { DealCategory } from './types';
-import { fetchPrimeDayDeals } from './services/geminiService';
+import { fetchPrimeDayDeals, generateProductImage } from './services/geminiService';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -18,11 +17,45 @@ const App: React.FC = () => {
     setError(null);
     setDealCategories(null);
     try {
-      const deals = await fetchPrimeDayDeals();
-      setDealCategories(deals);
+      // 1. Fetch text-based deal data first for a fast initial load
+      const categories = await fetchPrimeDayDeals();
+      setDealCategories(categories);
+      setIsLoading(false);
+
+      // 2. Sequentially generate images to avoid rate-limiting, updating the UI progressively
+      for (const category of categories) {
+        for (const deal of category.deals) {
+          // Add a longer delay between each API call to safely respect rate limits
+          await new Promise(resolve => setTimeout(resolve, 4000));
+          
+          try {
+            const imageUrl = await generateProductImage(deal.productName);
+            if (imageUrl) {
+              setDealCategories(prevCategories => {
+                if (!prevCategories) return null;
+                // Immaculately update the state to add the new image URL
+                return prevCategories.map(c =>
+                  c.categoryName !== category.categoryName
+                    ? c
+                    : {
+                        ...c,
+                        deals: c.deals.map(d =>
+                          d.productName !== deal.productName
+                            ? d
+                            : { ...d, imageUrl }
+                        ),
+                      }
+                );
+              });
+            }
+          } catch(e) {
+            console.error(`Failed to generate image for ${deal.productName}:`, e);
+            // Continue to the next image even if one fails
+          }
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'An unknown error occurred.');
-    } finally {
       setIsLoading(false);
     }
   }, []);
